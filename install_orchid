@@ -1,0 +1,254 @@
+#!/bin/bash
+#
+
+RED=$(echo -en '\033[00;31m')
+GREEN=$(echo -en '\033[00;32m')
+NC=$(echo -en '\033[0m')
+YELLOW=$(echo -en '\033[00;33m')
+
+echo "${GREEN}##################################"
+echo "#     Install Orchid Platform    #"
+echo "##################################
+${NC}"
+
+echo "
+${GREEN} Install Laravel by issuing the Composer${NC}"
+echo "  composer create-project --prefer-dist laravel/laravel orchid
+"
+read -r -p "${YELLOW}Install Laravel?[y/N]${NC}" ilaravel
+ilaravel=${ilaravel,,}    # tolower
+if [[ "$ilaravel" =~ ^(yes|y)$ ]]
+	then
+	read -e -r -p "${YELLOW}Enter laravel directory:${NC}" -i "orchid" laraveldir
+composer create-project --prefer-dist laravel/laravel "$laraveldir"
+	cd "$laraveldir"
+fi
+
+
+echo "
+${GREEN}1. Install Orchid Platform by using the Composer${NC}"
+read -r -p "${YELLOW}Install Orchid Platform?[y/N]${NC}" iorchid
+iorchid=${iorchid,,}    # tolower
+if [[ "$iorchid" =~ ^(yes|y)$ ]]
+	then
+	echo "  composer require orchid/platform
+"
+composer require orchid/platform
+fi
+
+
+source ./.env
+#cp ./.env ./.env.bak    
+
+echo "
+${GREEN}2. Enter application url (site url) in .env file${NC}"
+echo "Our application url in .env file = $APP_URL"
+read -r -p "${YELLOW}Change application url? [y/N]${NC} " changeurl
+changeurl=${changeurl,,}    # tolower
+if [[ "$changeurl" =~ ^(yes|y)$ ]]
+then
+	read -e -r -p "${YELLOW}APP_URL( $APP_URL )=${NC}" -i "$APP_URL" APP_URL
+	sed -i "/APP_URL\=/c APP_URL\=$APP_URL" ./.env
+fi
+
+
+echo "
+${GREEN}3. Publish vendor files${NC}"
+echo "  php artisan vendor:publish --provider='Orchid\Platform\Providers\FoundationServiceProvider'"
+sleep 1
+php artisan vendor:publish --provider="Orchid\Platform\Providers\FoundationServiceProvider"
+echo "
+  php artisan vendor:publish --all"
+sleep 1
+php artisan vendor:publish --all
+
+
+echo "
+${GREEN}4. Enter prefix of each route in the administration panel${NC}"
+DASHBOARD_PREFIX="dashboard"
+echo "Our administration panel prefix  = $DASHBOARD_PREFIX"
+read -r -p "${YELLOW}Change prefix? [y/N]${NC} " changepref
+changepref=${changepref,,}    # tolower
+if [[ "$changepref" =~ ^(yes|y)$ ]]
+then
+	read -e -r -p "${YELLOW}DASHBOARD_PREFIX( $DASHBOARD_PREFIX )=${NC}" -i "$DASHBOARD_PREFIX" DASHBOARD_PREFIX
+	sed -i "$ a DASHBOARD_PREFIX=$DASHBOARD_PREFIX" ./.env
+fi
+
+
+echo "
+${GREEN}5. Make available css/js/etc files${NC}"
+echo "  php artisan storage:link"
+php artisan storage:link
+echo "  php artisan orchid:link"
+php artisan orchid:link
+sleep 1
+
+
+echo "
+${GREEN}6. Enter database data in .env and config/database.php files${NC}"
+echo "Our database config in .env file"
+echo "DB_CONNECTION=$DB_CONNECTION"
+echo "DB_HOST=$DB_HOST"
+echo "DB_PORT=$DB_PORT"
+echo "DB_DATABASE=$DB_DATABASE"
+echo "DB_USERNAME=$DB_USERNAME"
+echo "DB_PASSWORD=$DB_PASSWORD
+"
+
+read -r -p "${YELLOW}Change database data? [y/N]${NC} " changedb
+changedb=${changedb,,}    # tolower
+if [[ "$changedb" =~ ^(yes|y)$ ]]
+then
+	read -e -r -p "${YELLOW}DB_CONNECTION( $DB_CONNECTION )=${NC}" -i "$DB_CONNECTION" DB_CONNECTION
+	read -e -r -p "${YELLOW}DB_HOST( $DB_HOST )=${NC}" -i "$DB_HOST" DB_HOST	
+	read -e -r -p "${YELLOW}DB_PORT( $DB_PORT )=${NC}" -i "$DB_PORT" DB_PORT	
+	read -e -r -p "${YELLOW}DB_DATABASE( $DB_DATABASE )=${NC}" -i "$DB_DATABASE" DB_DATABASE	
+	read -e -r -p "${YELLOW}DB_USERNAME( $DB_USERNAME )=${NC}" -i "$DB_USERNAME" DB_USERNAME	
+	read -e -r -p "${YELLOW}DB_PASSWORD( $DB_PASSWORD )=${NC}" -i "$DB_PASSWORD" DB_PASSWORD	
+	
+	
+	sed -i "/DB_CONNECTION\=/c DB_CONNECTION\=$DB_CONNECTION
+	 /DB_HOST\=/c DB_HOST\=$DB_HOST
+	 /DB_PORT\=/c DB_PORT\=$DB_PORT
+	 /DB_DATABASE\=/c DB_DATABASE\=$DB_DATABASE
+	 /DB_USERNAME\=/c DB_USERNAME\=$DB_USERNAME
+	 /DB_PASSWORD\=/c DB_PASSWORD\=$DB_PASSWORD" ./.env
+
+	echo "DB_CONNECTION=$DB_CONNECTION"
+	echo "DB_HOST=$DB_HOST"
+	echo "DB_PORT=$DB_PORT"
+	echo "DB_DATABASE=$DB_DATABASE"
+	echo "DB_USERNAME=$DB_USERNAME"
+	echo "DB_PASSWORD=$DB_PASSWORD"
+fi
+
+
+#echo "
+#php artisan down"
+#php artisan down
+echo "
+php artisan migrate"
+php artisan migrate
+
+
+
+echo "
+${GREEN}6. Create your admin user${NC}"
+
+read -r -p "${YELLOW}Create new admin user?[y/N]${NC}" addadmin
+addadmin=${addadmin,,}    # tolower
+if [[ "$addadmin" =~ ^(yes|y)$ ]]
+	then
+	
+	read -r -p "${YELLOW}Enter admin name:${NC}" admin_name
+	read -r -p "${YELLOW}Enter admin email:${NC}" admin_email
+	read -r -p "${YELLOW}Enter admin password:${NC}" admin_password
+
+	php artisan make:admin "$admin_name" "$admin_email" "$admin_password"
+
+fi
+
+
+echo "
+${GREEN}7. Inherit your model App\User.php${NC}"
+#mv app/User.php app/User.php.bak
+echo "<?php
+
+namespace App;
+
+use Orchid\Platform\Core\Models\User as BaseUser;
+
+class User extends BaseUser
+{
+
+}"
+echo "<?php
+
+namespace App;
+
+use Orchid\Platform\Core\Models\User as BaseUser;
+
+class User extends BaseUser
+{
+
+}" > app/User.php
+
+
+echo "
+${GREEN}8. Change default language in Orchid Platform (variable 'local' in config/app.php file)${NC}
+"
+locale_lang=$(sed -n "s/'locale'.*'\(.*\)',/\1/p" config/app.php)
+locale_lang=${locale_lang// /}
+
+read -e -r -p "${YELLOW}Language in Orchid Platform: ${NC}" -i "$locale_lang" locale_new
+if [[ "$locale_lang" != "$locale_new" ]]
+then
+	sed -i "s/'locale'.*=>.*',/'locale' => '$locale_new',/" config/app.php
+	echo "Language was changed on $locale_new"
+fi	
+
+
+echo "
+${GREEN}##################################
+"
+echo "Orchid Platform Success installes!${NC}
+"
+
+echo "To view ORCHID's dashboard go to:"
+echo "$APP_URL$DASHBOARD_PREFIX
+"
+
+
+read -r -p "${YELLOW}Did you view the ORCHID's dashboard? [Y/n]${NC} " vieworchid
+vieworchid=${vieworchid,,}    # tolower
+if [[ "$vieworchid" =~ ^(no|n)$ ]]
+then
+	tekdir=$(basename `pwd`)
+	fulldir=$(pwd)
+
+	echo "
+${YELLOW}#################################################${NC}
+If ORCHID's dashboard is visible by url $APP_URL$tekdir/\$DASHBOARD_PREFIX
+You should configure your web server's document / web root to be the /\$tekdir\public directory.
+
+Use one of the options:
+${GREEN}Method-1: Apache vhosts.conf ${NC}
+
+<VirtualHost *:80>
+	ServerAdmin webmaster@dummy-host.example.com
+	DocumentRoot ${RED}\"/Users/username/sites/ldemo/public\"${NC}
+	ServerName ldemo.dev
+	ServerAlias www.ldemo.dev
+
+	<Directory ${RED}\"/Users/username/sites/ldemo/public\"${NC}>
+		Allow from all
+	</Directory>
+</VirtualHost>
+
+Edit all selected in red on: ${fulldir}/public
+
+
+${GREEN}Method-2:  Apache .htaccess ${NC}
+
+Write in $APP_URL .htaccess file with text:
+${RED}
+	<IfModule mod_rewrite.c>
+		Options +FollowSymLinks
+		
+		DirectoryIndex ${tekdir}/public/index.php
+		RewriteEngine On
+		 
+		RewriteCond %{REQUEST_FILENAME} -f
+		RewriteRule ^(.+) $1 [L]
+		 
+		RewriteCond %{DOCUMENT_ROOT}${tekdir}/public%{REQUEST_URI} -f
+		RewriteRule ^(.+) ${tekdir}/public/$1 [L]
+		 
+		Options +SymLinksIfOwnerMatch
+		RewriteRule ^(.*)$ ${tekdir}/public/ [QSA,L]
+	</IfModule>
+${NC}
+${YELLOW}#################################################${NC}
+"
+fi
