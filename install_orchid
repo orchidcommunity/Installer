@@ -44,7 +44,7 @@ source ./.env
 echo "
 ${GREEN}2. Enter application url (site url) in .env file${NC}"
 echo "Our application url in .env file = $APP_URL"
-read -r -p "${YELLOW}Change application url? [y/N]${NC} " changeurl
+read -r -p "${YELLOW}Change application url(http:\/\/sitename.com\/)? [y/N]${NC} " changeurl
 changeurl=${changeurl,,}    # tolower
 if [[ "$changeurl" =~ ^(yes|y)$ ]]
 then
