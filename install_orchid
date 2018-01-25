@@ -31,9 +31,10 @@ read -r -p "${YELLOW}Install Orchid Platform?[y/N]${NC}" iorchid
 iorchid=${iorchid,,}    # tolower
 if [[ "$iorchid" =~ ^(yes|y)$ ]]
 	then
-	echo "  composer require orchid/platform
+	read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":2.*" orchidver
+	echo "  composer require orchid/platform${orchidver}
 "
-composer require orchid/platform
+composer require orchid/platform"$orchidver"
 fi
 
 
