@@ -7,50 +7,276 @@ NC=$(echo -en '\033[0m')
 YELLOW=$(echo -en '\033[00;33m')
 
 echo "${GREEN}##################################"
-echo "#     Install Orchid Platform    #"
-echo "##################################
+echo         "#     Install Orchid Platform    #"
+echo         "##################################
 ${NC}"
 
-echo "
-${GREEN} Install Laravel by issuing the Composer${NC}"
-echo "  composer create-project --prefer-dist laravel/laravel orchid
+fn_install_laravel()
+{
+    echo "
+    ${GREEN}Install Laravel by issuing the Composer${NC}"
+    echo "  composer create-project laravel/laravel \"5.8.*\" --prefer-dist
+    "
+    read -r -p "${YELLOW}Install Laravel?[y/N]${NC}" ilaravel
+    ilaravel=${ilaravel,,}    # tolower
+    if [[ "$ilaravel" =~ ^(yes|y)$ ]]
+        then
+        read -e -r -p "${YELLOW}Enter laravel directory (. current directory):${NC}" -i "orchid" laraveldir
+        composer create-project --prefer-dist laravel/laravel "$laraveldir" 
+        cd "$laraveldir"
+    fi
+}
+
+
+fn_install_orchid()
+{
+    echo "
+    ${GREEN}Install Orchid Platform by using the Composer${NC}"
+    read -r -p "${YELLOW}Install Orchid Platform?[y/N]${NC}" iorchid
+    iorchid=${iorchid,,}    # tolower
+    if [[ "$iorchid" =~ ^(yes|y)$ ]]
+        then
+        read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":4.*" orchidver
+        echo "  composer require orchid/platform${orchidver}
+    "
+    composer require orchid/platform"$orchidver"
+    fi
+}
+
+fn_app_url()
+{
+    source ./.env
+    #cp ./.env ./.env.bak    
+
+    echo "
+    ${GREEN}Enter application url (site url) in .env file${NC}"
+    echo "Our application url in .env file = $APP_URL"
+    read -r -p "${YELLOW}Change application url(http:\/\/sitename.com\/)? [y/N]${NC} " changeurl
+    changeurl=${changeurl,,}    # tolower
+    if [[ "$changeurl" =~ ^(yes|y)$ ]]
+    then
+        read -e -r -p "${YELLOW}APP_URL( $APP_URL )=${NC}" -i "$APP_URL" APP_URL
+        sed -i "/APP_URL\=/c APP_URL\=$APP_URL" ./.env
+    fi
+    
+    echo "
+    ${GREEN}4. Enter prefix of each route in the administration panel${NC}"
+    DASHBOARD_PREFIX="dashboard"
+    echo "Our administration panel prefix  = $DASHBOARD_PREFIX"
+    read -r -p "${YELLOW}Change prefix? [y/N]${NC} " changepref
+    changepref=${changepref,,}    # tolower
+    if [[ "$changepref" =~ ^(yes|y)$ ]]
+    then
+        read -e -r -p "${YELLOW}DASHBOARD_PREFIX( $DASHBOARD_PREFIX )=${NC}" -i "$DASHBOARD_PREFIX" DASHBOARD_PREFIX
+        sed -i "$ a DASHBOARD_PREFIX=$DASHBOARD_PREFIX" ./.env
+    fi
+
+    echo "
+    ${GREEN}Enter database data in .env and config/database.php files${NC}"
+    echo "Our database config in .env file"
+    echo "DB_CONNECTION=$DB_CONNECTION"
+    echo "DB_HOST=$DB_HOST"
+    echo "DB_PORT=$DB_PORT"
+    echo "DB_DATABASE=$DB_DATABASE"
+    echo "DB_USERNAME=$DB_USERNAME"
+    echo "DB_PASSWORD=$DB_PASSWORD
+    "
+
+    read -r -p "${YELLOW}Change database data? [y/N]${NC} " changedb
+    changedb=${changedb,,}    # tolower
+    if [[ "$changedb" =~ ^(yes|y)$ ]]
+    then
+        read -e -r -p "${YELLOW}DB_CONNECTION( $DB_CONNECTION )=${NC}" -i "$DB_CONNECTION" DB_CONNECTION
+        read -e -r -p "${YELLOW}DB_HOST( $DB_HOST )=${NC}" -i "$DB_HOST" DB_HOST	
+        read -e -r -p "${YELLOW}DB_PORT( $DB_PORT )=${NC}" -i "$DB_PORT" DB_PORT	
+        read -e -r -p "${YELLOW}DB_DATABASE( $DB_DATABASE )=${NC}" -i "$DB_DATABASE" DB_DATABASE	
+        read -e -r -p "${YELLOW}DB_USERNAME( $DB_USERNAME )=${NC}" -i "$DB_USERNAME" DB_USERNAME	
+        read -e -r -p "${YELLOW}DB_PASSWORD( $DB_PASSWORD )=${NC}" -i "$DB_PASSWORD" DB_PASSWORD	
+        
+        
+        sed -i "/DB_CONNECTION\=/c DB_CONNECTION\=$DB_CONNECTION
+         /DB_HOST\=/c DB_HOST\=$DB_HOST
+         /DB_PORT\=/c DB_PORT\=$DB_PORT
+         /DB_DATABASE\=/c DB_DATABASE\=$DB_DATABASE
+         /DB_USERNAME\=/c DB_USERNAME\=$DB_USERNAME
+         /DB_PASSWORD\=/c DB_PASSWORD\=$DB_PASSWORD" ./.env
+
+        echo "DB_CONNECTION=$DB_CONNECTION"
+        echo "DB_HOST=$DB_HOST"
+        echo "DB_PORT=$DB_PORT"
+        echo "DB_DATABASE=$DB_DATABASE"
+        echo "DB_USERNAME=$DB_USERNAME"
+        echo "DB_PASSWORD=$DB_PASSWORD"
+    fi
+}
+
+
+fn_run_orchid() 
+{
+    echo "
+    ${GREEN}Run Orchid Platform by using (php artisan orchid:install)${NC}"
+    read -r -p "${YELLOW}Run Orchid Platform?[y/N]${NC}" irunorchid
+    irunorchid=${irunorchid,,}    # tolower
+    if [[ "$irunorchid" =~ ^(yes|y)$ ]]
+        then
+        echo "  php artisan orchid:install
+        "
+        php artisan orchid:install
+    fi
+}
+
+fn_add_user() 
+{
+    echo "
+    ${GREEN}6. Create your admin user${NC}"
+
+    read -r -p "${YELLOW}Create new admin user?[y/N]${NC}" addadmin
+    addadmin=${addadmin,,}    # tolower
+    if [[ "$addadmin" =~ ^(yes|y)$ ]]
+        then
+        
+        read -r -p "${YELLOW}Enter admin name:${NC}" admin_name
+        read -r -p "${YELLOW}Enter admin email:${NC}" admin_email
+        read -r -p "${YELLOW}Enter admin password:${NC}" admin_password
+
+        php artisan orchid:admin "$admin_name" "$admin_email" "$admin_password"
+
+    fi
+}
+
+
+fn_install_package()
+{
+echo " 
+Select package:
+1) Demo kit
+2) XSetting
+3) FieldEx
+
+0) Return to main menu
 "
-read -r -p "${YELLOW}Install Laravel?[y/N]${NC}" ilaravel
-ilaravel=${ilaravel,,}    # tolower
-if [[ "$ilaravel" =~ ^(yes|y)$ ]]
-	then
-	read -e -r -p "${YELLOW}Enter laravel directory:${NC}" -i "orchid" laraveldir
-composer create-project --prefer-dist laravel/laravel "$laraveldir"
-	cd "$laraveldir"
-fi
+
+read -r -p "${YELLOW}Select variable: (1-3)${NC}" ipack
+ipack=${ipack,,}    # tolower
 
 
-echo "
-${GREEN}1. Install Orchid Platform by using the Composer${NC}"
-read -r -p "${YELLOW}Install Orchid Platform?[y/N]${NC}" iorchid
-iorchid=${iorchid,,}    # tolower
-if [[ "$iorchid" =~ ^(yes|y)$ ]]
-	then
-	read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":2.*" orchidver
-	echo "  composer require orchid/platform${orchidver}
+case "$ipack" in 
+  1)
+    composer require orchids/demokit
+    fn_install_package
+    exit 0
+    ;;
+  2)
+    composer require orchids/xsetting
+    php artisan migrate
+    fn_install_package
+    exit 0
+    ;;	
+  3)
+    composer require orchids/fieldex
+    fn_install_package
+    exit 0
+    ;;	
+  0)
+    fn_start
+    exit 0
+    ;;	
+  # Default
+  *)
+    fn_start
+    ;;
+esac
+
+}
+
+fn_start()
+{
+echo " 
+Select variable:
+1) Full instalation
+2) Install Laravel by issuing the Composer
+3) Install Orchid Platform by using the Composer
+4) Seting in .env file (site url, dashboard, database)
+5) Run install Orchid (php artisan orchid:install)
+6) Create your admin user
+7) Install other packages
+
+
+0) Exit
 "
-composer require orchid/platform"$orchidver"
-fi
+
+read -r -p "${YELLOW}Select variable: (1-7)${NC}" istart
+istart=${istart,,}    # tolower
+
+case "$istart" in 
+  # 1) Full instalation
+  1)
+    fn_install_laravel
+    fn_install_orchid
+    fn_app_url
+    fn_run_orchid
+    fn_add_user
+    fn_start
+    exit 0
+    ;;
+	
+  # 2) Install Laravel by issuing the Composer
+  2)
+    fn_install_laravel
+    fn_start
+    exit 0
+    ;;	
+  3)
+    fn_install_orchid
+    fn_start
+    exit 0
+    ;;	
+  4)
+    fn_app_url
+    fn_start
+    exit 0
+    ;;	
+  5)
+    fn_run_orchid
+    fn_start
+    exit 0
+    ;;	
+  6)
+    fn_add_user
+    fn_start
+    exit 0
+    ;;	    
+  7)
+    fn_install_package
+    fn_start
+    exit 0
+    ;;	        
+  0)
+    exit 0
+    ;;	
+  # Default
+  *)
+	fn_install_laravel
+    fn_install_orchid
+    fn_app_url
+    fn_run_orchid
+    fn_add_user
+    fn_start
+    ;;
+esac
+
+}
+
+fn_start
 
 
-source ./.env
-#cp ./.env ./.env.bak    
 
-echo "
-${GREEN}2. Enter application url (site url) in .env file${NC}"
-echo "Our application url in .env file = $APP_URL"
-read -r -p "${YELLOW}Change application url(http:\/\/sitename.com\/)? [y/N]${NC} " changeurl
-changeurl=${changeurl,,}    # tolower
-if [[ "$changeurl" =~ ^(yes|y)$ ]]
-then
-	read -e -r -p "${YELLOW}APP_URL( $APP_URL )=${NC}" -i "$APP_URL" APP_URL
-	sed -i "/APP_URL\=/c APP_URL\=$APP_URL" ./.env
-fi
+
+
+
+
+
+
 
 
 echo "
@@ -64,17 +290,6 @@ sleep 1
 php artisan vendor:publish --all
 
 
-echo "
-${GREEN}4. Enter prefix of each route in the administration panel${NC}"
-DASHBOARD_PREFIX="dashboard"
-echo "Our administration panel prefix  = $DASHBOARD_PREFIX"
-read -r -p "${YELLOW}Change prefix? [y/N]${NC} " changepref
-changepref=${changepref,,}    # tolower
-if [[ "$changepref" =~ ^(yes|y)$ ]]
-then
-	read -e -r -p "${YELLOW}DASHBOARD_PREFIX( $DASHBOARD_PREFIX )=${NC}" -i "$DASHBOARD_PREFIX" DASHBOARD_PREFIX
-	sed -i "$ a DASHBOARD_PREFIX=$DASHBOARD_PREFIX" ./.env
-fi
 
 
 echo "
@@ -86,43 +301,6 @@ php artisan orchid:link
 sleep 1
 
 
-echo "
-${GREEN}6. Enter database data in .env and config/database.php files${NC}"
-echo "Our database config in .env file"
-echo "DB_CONNECTION=$DB_CONNECTION"
-echo "DB_HOST=$DB_HOST"
-echo "DB_PORT=$DB_PORT"
-echo "DB_DATABASE=$DB_DATABASE"
-echo "DB_USERNAME=$DB_USERNAME"
-echo "DB_PASSWORD=$DB_PASSWORD
-"
-
-read -r -p "${YELLOW}Change database data? [y/N]${NC} " changedb
-changedb=${changedb,,}    # tolower
-if [[ "$changedb" =~ ^(yes|y)$ ]]
-then
-	read -e -r -p "${YELLOW}DB_CONNECTION( $DB_CONNECTION )=${NC}" -i "$DB_CONNECTION" DB_CONNECTION
-	read -e -r -p "${YELLOW}DB_HOST( $DB_HOST )=${NC}" -i "$DB_HOST" DB_HOST	
-	read -e -r -p "${YELLOW}DB_PORT( $DB_PORT )=${NC}" -i "$DB_PORT" DB_PORT	
-	read -e -r -p "${YELLOW}DB_DATABASE( $DB_DATABASE )=${NC}" -i "$DB_DATABASE" DB_DATABASE	
-	read -e -r -p "${YELLOW}DB_USERNAME( $DB_USERNAME )=${NC}" -i "$DB_USERNAME" DB_USERNAME	
-	read -e -r -p "${YELLOW}DB_PASSWORD( $DB_PASSWORD )=${NC}" -i "$DB_PASSWORD" DB_PASSWORD	
-	
-	
-	sed -i "/DB_CONNECTION\=/c DB_CONNECTION\=$DB_CONNECTION
-	 /DB_HOST\=/c DB_HOST\=$DB_HOST
-	 /DB_PORT\=/c DB_PORT\=$DB_PORT
-	 /DB_DATABASE\=/c DB_DATABASE\=$DB_DATABASE
-	 /DB_USERNAME\=/c DB_USERNAME\=$DB_USERNAME
-	 /DB_PASSWORD\=/c DB_PASSWORD\=$DB_PASSWORD" ./.env
-
-	echo "DB_CONNECTION=$DB_CONNECTION"
-	echo "DB_HOST=$DB_HOST"
-	echo "DB_PORT=$DB_PORT"
-	echo "DB_DATABASE=$DB_DATABASE"
-	echo "DB_USERNAME=$DB_USERNAME"
-	echo "DB_PASSWORD=$DB_PASSWORD"
-fi
 
 
 #echo "
@@ -134,45 +312,22 @@ php artisan migrate
 
 
 
-echo "
-${GREEN}6. Create your admin user${NC}"
-
-read -r -p "${YELLOW}Create new admin user?[y/N]${NC}" addadmin
-addadmin=${addadmin,,}    # tolower
-if [[ "$addadmin" =~ ^(yes|y)$ ]]
-	then
-	
-	read -r -p "${YELLOW}Enter admin name:${NC}" admin_name
-	read -r -p "${YELLOW}Enter admin email:${NC}" admin_email
-	read -r -p "${YELLOW}Enter admin password:${NC}" admin_password
-
-	php artisan make:admin "$admin_name" "$admin_email" "$admin_password"
-
-fi
 
 
 echo "
 ${GREEN}7. Inherit your model App\User.php${NC}"
 #mv app/User.php app/User.php.bak
 echo "<?php
-
 namespace App;
-
 use Orchid\Platform\Core\Models\User as BaseUser;
-
 class User extends BaseUser
 {
-
 }"
 echo "<?php
-
 namespace App;
-
 use Orchid\Platform\Core\Models\User as BaseUser;
-
 class User extends BaseUser
 {
-
 }" > app/User.php
 
 
@@ -212,26 +367,19 @@ then
 ${YELLOW}#################################################${NC}
 If ORCHID's dashboard is visible by url $APP_URL$tekdir/\$DASHBOARD_PREFIX
 You should configure your web server's document / web root to be the /\$tekdir\public directory.
-
 Use one of the options:
 ${GREEN}Method-1: Apache vhosts.conf ${NC}
-
 <VirtualHost *:80>
 	ServerAdmin webmaster@dummy-host.example.com
 	DocumentRoot ${RED}\"/Users/username/sites/ldemo/public\"${NC}
 	ServerName ldemo.dev
 	ServerAlias www.ldemo.dev
-
 	<Directory ${RED}\"/Users/username/sites/ldemo/public\"${NC}>
 		Allow from all
 	</Directory>
 </VirtualHost>
-
 Edit all selected in red on: ${fulldir}/public
-
-
 ${GREEN}Method-2:  Apache .htaccess ${NC}
-
 Write in $APP_URL .htaccess file with text:
 ${RED}
 	<IfModule mod_rewrite.c>
