@@ -36,7 +36,7 @@ fn_install_orchid()
     iorchid=${iorchid,,}    # tolower
     if [[ "$iorchid" =~ ^(yes|y)$ ]]
         then
-        read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":4.*" orchidver
+        read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":5.*" orchidver
         echo "  composer require orchid/platform${orchidver}
     "
     composer require orchid/platform"$orchidver"
@@ -49,7 +49,7 @@ fn_app_url()
     #cp ./.env ./.env.bak    
 
     echo "
-    ${GREEN}Enter application url (site url) in .env file${NC}"
+    ${GREEN}3. Enter application url (site url) in .env file${NC}"
     echo "Our application url in .env file = $APP_URL"
     read -r -p "${YELLOW}Change application url(http:\/\/sitename.com\/)? [y/N]${NC} " changeurl
     changeurl=${changeurl,,}    # tolower
@@ -157,7 +157,7 @@ Select package:
 0) Return to main menu
 "
 
-read -r -p "${YELLOW}Select variable: (1-3)${NC}" ipack
+read -r -p "${YELLOW}Select variable: (1-4)${NC}" ipack
 ipack=${ipack,,}    # tolower
 
 
