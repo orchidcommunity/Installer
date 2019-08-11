@@ -149,9 +149,10 @@ fn_install_package()
 {
 echo " 
 Select package:
-1) Demo kit
-2) XSetting
-3) FieldEx
+1) Press (https://github.com/orchidsoftware/press)
+2) Demo kit (https://github.com/orchidcommunity/DemoKit)
+3) XSetting (https://github.com/orchidcommunity/XSetting)
+4) Repeater Field (https://github.com/Nks/orchid-repeater-field)
 
 0) Return to main menu
 "
@@ -162,21 +163,27 @@ ipack=${ipack,,}    # tolower
 
 case "$ipack" in 
   1)
-    composer require orchids/demokit
+    composer require orchid/press
+    php artisan migrate
     fn_install_package
     exit 0
     ;;
   2)
+    composer require orchids/demokit
+    fn_install_package
+    exit 0
+    ;;	
+  3)
     composer require orchids/xsetting
     php artisan migrate
     fn_install_package
     exit 0
     ;;	
-  3)
-    composer require orchids/fieldex
+  4)
+    composer require nakukryskin/orchid-repeater-field
     fn_install_package
     exit 0
-    ;;	
+    ;;	    
   0)
     fn_start
     exit 0
@@ -256,7 +263,7 @@ case "$istart" in
     ;;	
   # Default
   *)
-	fn_install_laravel
+    fn_install_laravel
     fn_install_orchid
     fn_app_url
     fn_run_orchid
@@ -268,136 +275,3 @@ esac
 }
 
 fn_start
-
-
-
-
-
-
-
-
-
-
-
-echo "
-${GREEN}3. Publish vendor files${NC}"
-echo "  php artisan vendor:publish --provider='Orchid\Platform\Providers\FoundationServiceProvider'"
-sleep 1
-php artisan vendor:publish --provider="Orchid\Platform\Providers\FoundationServiceProvider"
-echo "
-  php artisan vendor:publish --all"
-sleep 1
-php artisan vendor:publish --all
-
-
-
-
-echo "
-${GREEN}5. Make available css/js/etc files${NC}"
-echo "  php artisan storage:link"
-php artisan storage:link
-echo "  php artisan orchid:link"
-php artisan orchid:link
-sleep 1
-
-
-
-
-#echo "
-#php artisan down"
-#php artisan down
-echo "
-php artisan migrate"
-php artisan migrate
-
-
-
-
-
-echo "
-${GREEN}7. Inherit your model App\User.php${NC}"
-#mv app/User.php app/User.php.bak
-echo "<?php
-namespace App;
-use Orchid\Platform\Core\Models\User as BaseUser;
-class User extends BaseUser
-{
-}"
-echo "<?php
-namespace App;
-use Orchid\Platform\Core\Models\User as BaseUser;
-class User extends BaseUser
-{
-}" > app/User.php
-
-
-echo "
-${GREEN}8. Change default language in Orchid Platform (variable 'local' in config/app.php file)${NC}
-"
-locale_lang=$(sed -n "s/'locale'.*'\(.*\)',/\1/p" config/app.php)
-locale_lang=${locale_lang// /}
-
-read -e -r -p "${YELLOW}Language in Orchid Platform: ${NC}" -i "$locale_lang" locale_new
-if [[ "$locale_lang" != "$locale_new" ]]
-then
-	sed -i "s/'locale'.*=>.*',/'locale' => '$locale_new',/" config/app.php
-	echo "Language was changed on $locale_new"
-fi	
-
-
-echo "
-${GREEN}##################################
-"
-echo "Orchid Platform Success installes!${NC}
-"
-
-echo "To view ORCHID's dashboard go to:"
-echo "$APP_URL$DASHBOARD_PREFIX
-"
-
-
-read -r -p "${YELLOW}Did you view the ORCHID's dashboard? [Y/n]${NC} " vieworchid
-vieworchid=${vieworchid,,}    # tolower
-if [[ "$vieworchid" =~ ^(no|n)$ ]]
-then
-	tekdir=$(basename `pwd`)
-	fulldir=$(pwd)
-
-	echo "
-${YELLOW}#################################################${NC}
-If ORCHID's dashboard is visible by url $APP_URL$tekdir/\$DASHBOARD_PREFIX
-You should configure your web server's document / web root to be the /\$tekdir\public directory.
-Use one of the options:
-${GREEN}Method-1: Apache vhosts.conf ${NC}
-<VirtualHost *:80>
-	ServerAdmin webmaster@dummy-host.example.com
-	DocumentRoot ${RED}\"/Users/username/sites/ldemo/public\"${NC}
-	ServerName ldemo.dev
-	ServerAlias www.ldemo.dev
-	<Directory ${RED}\"/Users/username/sites/ldemo/public\"${NC}>
-		Allow from all
-	</Directory>
-</VirtualHost>
-Edit all selected in red on: ${fulldir}/public
-${GREEN}Method-2:  Apache .htaccess ${NC}
-Write in $APP_URL .htaccess file with text:
-${RED}
-	<IfModule mod_rewrite.c>
-		Options +FollowSymLinks
-		
-		DirectoryIndex ${tekdir}/public/index.php
-		RewriteEngine On
-		 
-		RewriteCond %{REQUEST_FILENAME} -f
-		RewriteRule ^(.+) $1 [L]
-		 
-		RewriteCond %{DOCUMENT_ROOT}${tekdir}/public%{REQUEST_URI} -f
-		RewriteRule ^(.+) ${tekdir}/public/$1 [L]
-		 
-		Options +SymLinksIfOwnerMatch
-		RewriteRule ^(.*)$ ${tekdir}/public/ [QSA,L]
-	</IfModule>
-${NC}
-${YELLOW}#################################################${NC}
-"
-fi
