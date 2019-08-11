@@ -11,5 +11,5 @@ bash <(curl -s https://raw.githubusercontent.com/orchidcommunity/installer/maste
 ```
 
 
-![install1](https://user-images.githubusercontent.com/29531264/35010427-6bd7341e-fb35-11e7-95c9-ffc24157f01d.gif)
+![install1](https://user-images.githubusercontent.com/29531264/62834937-faba7100-bc7c-11e9-99b9-53067f8a8110.gif)
 
