@@ -61,7 +61,7 @@ fn_app_url()
     
     echo "
     ${GREEN}4. Enter prefix of each route in the administration panel${NC}"
-    DASHBOARD_PREFIX="dashboard"
+    DASHBOARD_PREFIX="admin"
     echo "Our administration panel prefix  = $DASHBOARD_PREFIX"
     read -r -p "${YELLOW}Change prefix? [y/N]${NC} " changepref
     changepref=${changepref,,}    # tolower
