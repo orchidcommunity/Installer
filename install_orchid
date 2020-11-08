@@ -15,7 +15,7 @@ fn_install_laravel()
 {
     echo "
     ${GREEN}Install Laravel by issuing the Composer${NC}"
-    echo "  composer create-project laravel/laravel \"7.*\" --prefer-dist
+    echo "  composer create-project laravel/laravel \"8.*\" --prefer-dist
     "
     read -r -p "${YELLOW}Install Laravel?[y/N]${NC}" ilaravel
     ilaravel=${ilaravel,,}    # tolower
@@ -36,7 +36,7 @@ fn_install_orchid()
     iorchid=${iorchid,,}    # tolower
     if [[ "$iorchid" =~ ^(yes|y)$ ]]
         then
-        read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":7.*" orchidver
+        read -e -r -p "${YELLOW}Enter orchid version:${NC}" -i ":9.*" orchidver
         echo "  composer require orchid/platform${orchidver}
     "
     composer require orchid/platform"$orchidver"
